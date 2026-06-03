@@ -47,14 +47,14 @@ async function getData(){
   let itemidentifiers = await fetch('https://raw.githubusercontent.com/Mojang/bedrock-samples/main/metadata/vanilladata_modules/mojang-items.json').then(response => {return response.json()})
   let entityidentifiers = await fetch('https://raw.githubusercontent.com/Mojang/bedrock-samples/main/metadata/vanilladata_modules/mojang-entities.json').then(response => {return response.json()})
   
-  let tiles = await fetch('https://mcbe-essentials.github.io/data/tile-entities-v2.json').then(response => {return response.json()})
-  /*let potions = await fetch('https://mcbe-essentials.github.io/data/potion-types.json').then(response => {return response.json()})
-  let effects = await fetch('https://mcbe-essentials.github.io/data/effects-list.json').then(response => {return response.json()})
-  let enchantments = await fetch('https://mcbe-essentials.github.io/data/enchantments.json').then(response => {return response.json()})*/
-  let general_data = await fetch('https://mcbe-essentials.github.io/data/general.json').then(response => {return response.json()})
-  let allowedblocks = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.0/blockStates.json').then(response => {return response.json()}) //Returns an array of all the possible blocks in the game (every blockstate combination) as NBT objects.
-  let blocksj2b = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.0/blocksJ2B.json').then(response => {return response.json()})
-  let blocksb2j = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.0/blocksB2J.json').then(response => {return response.json()})
+  let tiles = await fetch('/data/tile-entities-v2.json').then(response => {return response.json()})
+  /*let potions = await fetch('/data/potion-types.json').then(response => {return response.json()})
+  let effects = await fetch('/data/effects-list.json').then(response => {return response.json()})
+  let enchantments = await fetch('/data/enchantments.json').then(response => {return response.json()})*/
+  let general_data = await fetch('/data/general.json').then(response => {return response.json()})
+  let allowedblocks = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.111/blockStates.json').then(response => {return response.json()}) //Returns an array of all the possible blocks in the game (every blockstate combination) as NBT objects.
+  let blocksj2b = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.111/blocksJ2B.json').then(response => {return response.json()})
+  let blocksb2j = await fetch('https://raw.githubusercontent.com/PrismarineJS/minecraft-data/master/data/bedrock/1.21.111/blocksB2J.json').then(response => {return response.json()})
   let texturedef = await fetch('https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/blocks.json').then(response => {return response.json()})
   let texturepaths = await fetch('https://raw.githubusercontent.com/Mojang/bedrock-samples/preview/resource_pack/textures/terrain_texture.json').then(async response => {return await response.text().then((str) => JSON.parse(sterilizeJSON(str)))})
   let preview_texturedef = await fetch('https://raw.githubusercontent.com/Mojang/bedrock-samples/preview/resource_pack/blocks.json').then(response => {return response.json()})
@@ -75,7 +75,10 @@ async function getData(){
   data.effects = general_data.effects;
   data.enchantments = general_data.enchantments;
   data.armor_trims = general_data.armor_trims;
-  
+  data.dyeable_items = general_data.dyeable_items;
+  data.trimmable_armors = general_data.trimmable_armors;
+  data.banner_patterns = general_data.banner_patterns;
+  data.banner_colors = general_data.banner_colors;
   data.allowedblocks = allowedblocks;
   
   data.rendering.texturedef = texturedef;
@@ -133,13 +136,135 @@ async function getData(){
   createDatalist(data.armor_trims.patterns, document.getElementById("item-armor-trim-pattern"));
   createDatalist(data.armor_trims.materials, document.getElementById("item-armor-trim-material"));
   
+  
+let siglas = Object.keys(data.banner_patterns); 
+
+const bases = ["tentity-banner-base", "item-banner-base"];
+bases.forEach(id => {
+    let el = document.getElementById(id);
+    if(el) {
+        el.innerHTML = ""; 
+        data.banner_colors.forEach((cor, i) => {
+            let opt = document.createElement("option");
+            opt.value = i;
+            opt.innerHTML = cor;
+            el.appendChild(opt);
+        });
+        el.onchange = updateBannerPreview;
+    }
+});
+  
   document.getElementById("tentity-cauldron-potion").innerHTML = "";
   for(let i = 0; i < data.potioneffects.length; i++){
-    let optionel = document.createElement("option");
-    optionel.value = i - 1;
-    optionel.innerHTML = data.potioneffects[i];
-    document.getElementById("tentity-cauldron-potion").appendChild(optionel);
+    let optCauldron = document.createElement("option");
+    optCauldron.value = i;
+    optCauldron.innerHTML = data.potioneffects[i];
+    document.getElementById("tentity-cauldron-potion").appendChild(optCauldron);
+    
   }
+  
+const baseSelectTentity = document.getElementById("tentity-banner-base");
+if (baseSelectTentity) {
+    baseSelectTentity.onchange = updateBannerPreview;
+    baseSelectTentity.innerHTML = ""; 
+    for (let i = 0; i < data.banner_colors.length; i++) {
+        let opt = document.createElement("option");
+        opt.value = i;
+        opt.innerHTML = data.banner_colors[i];
+        baseSelectTentity.appendChild(opt);
+    }
+}
+if(document.getElementById("tentity-banner-type")) {
+    document.getElementById("tentity-banner-type").onchange = updateBannerPreview;
+}
+
+
+const baseSelectItem = document.getElementById("item-banner-base");
+if (baseSelectItem) {
+    baseSelectItem.onchange = updateBannerPreview;
+    baseSelectItem.innerHTML = ""; 
+    for (let i = 0; i < data.banner_colors.length; i++) {
+        let opt = document.createElement("option");
+        opt.value = i;
+        opt.innerHTML = data.banner_colors[i];
+        baseSelectItem.appendChild(opt);
+    }
+}
+if(document.getElementById("item-banner-type")) {
+    document.getElementById("item-banner-type").onchange = updateBannerPreview;
+}
+
+// 1. From the Banner Tab to the Overview (Overview <--- Banner)
+document.getElementById("item-banner-base").addEventListener("change", function(e) {
+    const val = e.target.value;
+    const itemDiv = document.getElementById("item-banner-tab");
+    const isItemVisible = itemDiv && itemDiv.style.display !== "none" && itemDiv.offsetHeight > 0;
+    
+    const activeItem = (typeof currentItem !== 'undefined') ? currentItem : null;
+    
+    const isShield = isItemVisible && activeItem && activeItem.Name && activeItem.Name.value === "minecraft:shield";
+    
+    if (!isShield) {
+        const generalData = document.getElementById("item-general-data");
+        if (generalData) generalData.value = val;
+        
+        if (activeItem && activeItem.Damage) {
+            activeItem.Damage.value = parseInt(val);
+        }
+        
+        updateBannerPreview();
+    } else {
+        updateBannerPreview();
+    }
+});
+
+// 2. From the Overview Tab to the Banner Tab (Overview ---> Banner)
+document.getElementById("item-general-data").addEventListener("input", function(e) {
+    const val = e.target.value;
+    const bannerBaseSelect = document.getElementById("item-banner-base");
+    const itemDiv = document.getElementById("item-banner-tab");
+    const isItemVisible = itemDiv && itemDiv.style.display !== "none";
+    
+    const activeItem = (typeof currentItem !== 'undefined') ? currentItem : null;
+    const isShield = isItemVisible && activeItem && activeItem.Name && activeItem.Name.value === "minecraft:shield";
+    
+    if (!isShield) {
+        if (isItemVisible && bannerBaseSelect) {
+            bannerBaseSelect.value = val;
+            
+            if (activeItem && activeItem.Damage) {
+                activeItem.Damage.value = parseInt(val) || 0;
+            }
+            
+            updateBannerPreview();
+        }
+    } else {
+    }
+});
+  
+
+  // 1. From the Potion tab to the Overview Data (When selecting by name)
+  document.getElementById("item-potion-effect-input").addEventListener("change", function(e) {
+    const val = e.target.value;
+    if (val !== "") {
+      document.getElementById("item-general-data").value = val;
+      if (typeof currentItem !== 'undefined') {
+        currentItem.Damage.value = parseInt(val);
+      }
+    }
+  });
+
+  // 2. From the Overview Data to the Potion Tab (When manually entering the number)
+  document.getElementById("item-general-data").addEventListener("input", function(e) {
+    const val = e.target.value;
+    
+    if (typeof currentItem !== 'undefined') {
+      currentItem.Damage.value = parseInt(val) || 0;
+    }
+
+    const potionSelect = document.getElementById("item-potion-effect-input");
+    potionSelect.value = val; 
+  });
   
   document.getElementById("upload-button-disabled").style.display = "none";
   document.getElementById("upload-button-enabled").style.display = "block";
@@ -149,6 +274,170 @@ async function getData(){
   if(window.awaitingLaunch){
     structureToEditor(window.awaitingLaunch)
   }
+}
+
+const bannerColorsHex = ["#1D1D21","#B02E26","#5E7C16","#835432","#3C44AA","#8932B8","#169C9C","#9D9D97","#474F52","#F38BAA","#80C71F","#FED83D","#3AB3DA","#C74EBD","#F9801D","#F9FFFE"];
+function updateBannerPreview() {
+    let prefix = "item-";
+    let viewBase = document.getElementById("item-view-base");
+    let viewLayers = document.getElementById("item-view-layers");
+    let baseElem = document.getElementById("item-banner-base");
+
+    // 1. If you can't find the ITEM elements or they are hidden, switch to the BLOCK
+    const itemDiv = document.getElementById("item-banner-tab");
+    const isItemVisible = itemDiv && itemDiv.style.display !== "none" && itemDiv.offsetHeight > 0;
+    
+    const activeItem = (typeof currentItem !== 'undefined') ? currentItem : null;
+    const isShield = isItemVisible && activeItem && activeItem.Name && activeItem.Name.value === "minecraft:shield";
+    const previewContainer = document.getElementById(isItemVisible ? "item-banner-preview" : "banner-preview");
+
+if (previewContainer) {
+    if (isShield) {
+        previewContainer.classList.add("is-shield");
+    } else {
+        previewContainer.classList.remove("is-shield");
+    }
+}
+    
+    // Define the subfolder according to its structure
+    const folder = isShield ? "banner_patterns/shield" : "banner_patterns";
+    
+    if (!isItemVisible) {
+        prefix = "tentity-";
+        viewBase = document.getElementById("view-base");
+        viewLayers = document.getElementById("view-layers");
+        baseElem = document.getElementById("tentity-banner-base");
+    }
+    
+    if (!viewBase || !baseElem) return;
+
+    const typeElem = document.getElementById(prefix + "banner-type");
+    const patternList = document.getElementById(prefix + "banner-patterns-list");
+    const btnAdd = document.getElementById(isItemVisible ? "item-btn-add-pattern" : "btn-add-pattern");
+    const warning = document.getElementById(isItemVisible ? "item-ominous-warning" : "ominous-warning");
+    const isOminous = typeElem ? typeElem.checked : false;
+    const baseColorIdx = baseElem.value;
+
+    viewLayers.innerHTML = "";
+
+    if (isOminous) {
+        // --- OMINOUS MODE ---
+        // Hides the add button (btnAdd) and the text next to it.
+        if(btnAdd) btnAdd.style.display = "none"; 
+        if(warning) warning.style.display = "inline"; 
+        
+        // Blocks the pattern list (makes it opaque and prevents clicks)
+        if(patternList) {
+            patternList.style.opacity = "0.4";
+            patternList.style.pointerEvents = "none";
+        }
+        
+        if(baseElem) baseElem.disabled = true;
+        
+        viewBase.style.webkitMaskImage = "none";
+        viewBase.style.backgroundColor = "transparent";
+        viewBase.style.backgroundImage = `url('/data/${folder}/illager.png')`;
+        
+        if (isShield) {
+            viewBase.style.backgroundSize = "650% 330%"; 
+            viewBase.style.backgroundPosition = "-10px -10px";
+            viewBase.style.imageRendering = "pixelated";
+        } else {
+            viewBase.style.backgroundSize = "290.9%"; 
+            viewBase.style.backgroundPosition = "0px -2px";
+            viewBase.style.imageRendering = "pixelated";
+        }
+
+        viewLayers.innerHTML = "";
+
+    } else {
+        // --- NORMAL MODE ---
+        if(btnAdd) btnAdd.style.display = "inline-block"; 
+        if(warning) warning.style.display = "none"; 
+        
+        viewBase.style.backgroundImage = "none";
+        viewBase.style.backgroundColor = bannerColorsHex[baseColorIdx] || "#000";
+        const urlBase = `/data/${folder}/base.png`;
+        viewBase.style.webkitMaskImage = `url(${urlBase})`;
+        
+        if (isShield) {
+        	viewBase.className = "banner-layer-shield";
+            viewBase.style.imageRendering = "pixelated";
+        } else {
+        }
+        
+        if (patternList) {
+        	patternList.style.opacity = "1";
+            patternList.style.pointerEvents = "auto";
+            const rows = patternList.querySelectorAll(':scope > div');
+            rows.forEach(row => {
+                const pSel = row.querySelector('.p-sel');
+                const cSel = row.querySelector('.c-sel');
+                if (pSel && cSel && pSel.value !== "none") {
+                    const layer = document.createElement("div");
+                    layer.style.backgroundColor = bannerColorsHex[cSel.value];
+                    const url = `/data/${folder}/${pSel.value}.png`;
+                    layer.style.webkitMaskImage = `url(${url})`;
+                    
+                    if (isShield) {
+                    	layer.className = "banner-layer-shield";
+                        layer.style.imageRendering = "pixelated";
+                    } else {
+                    	layer.className = "banner-layer";
+                    }
+                    viewLayers.appendChild(layer);
+                }
+            });
+        }
+        if(baseElem) baseElem.disabled = false;
+    }
+}
+function addBannerPatternRow(pattern = 'none', color = 0) {
+    const itemDiv = document.getElementById("item-banner-tab");
+    const isItemVisible = itemDiv && itemDiv.style.display !== "none" && itemDiv.offsetHeight > 0;
+    
+    const listId = isItemVisible ? 'item-banner-patterns-list' : 'tentity-banner-patterns-list';
+    const list = document.getElementById(listId);
+
+    if (!list || list.childElementCount >= 6) return; 
+
+    let div = document.createElement("div");
+    div.style.marginBottom = "8px";
+    div.innerHTML = `
+        <img src="/assets/icons/icon_trash.png" 
+             class="minibutton" style="vertical-align:middle;" 
+             onclick="this.parentElement.remove(); updateBannerPreview();">
+        <select class="app-input p-sel" style="width:140px; vertical-align:middle;"></select>
+        <select class="app-input c-sel" style="width:110px; margin-left:5px; vertical-align:middle;"></select>
+    `;
+
+    const pSel = div.querySelector('.p-sel');
+    const cSel = div.querySelector('.c-sel');
+
+    for (let s in data.banner_patterns) {
+        pSel.innerHTML += `<option value="${s}">${data.banner_patterns[s]}</option>`;
+    }
+    data.banner_colors.forEach((cor, i) => {
+        cSel.innerHTML += `<option value="${i}">${cor}</option>`;
+    });
+
+    if (pattern === 'ill') {
+        let exists = Array.from(pSel.options).some(opt => opt.value === 'ill');
+        if (!exists) {
+            let opt = document.createElement("option");
+            opt.value = "ill";
+            opt.text = "Illager (Ominous)";
+            pSel.appendChild(opt);
+        }
+    }
+    
+    pSel.value = pattern;
+    cSel.value = color;
+    pSel.onchange = updateBannerPreview;
+    cSel.onchange = updateBannerPreview;	
+
+    list.appendChild(div);
+    updateBannerPreview();
 }
 
 function openItemEditor(){
@@ -243,14 +532,223 @@ function openItemEditor(){
     document.getElementById("item-map-tab").style.display = "none";
   }
   
+// Firework tab
+try {
+    const isRocket = item && item.Name && item.Name.value === "minecraft:firework_rocket";
+    const isStar = item && item.Name && item.Name.value === "minecraft:firework_star";
+    const fireworkTab = document.getElementById("item-fireworks-tab");
+
+    if (isRocket || isStar) {
+        if (fireworkTab) fireworkTab.style.display = "unset";
+        const bannerTab = document.getElementById("item-banner-tab");
+        if (bannerTab) bannerTab.style.display = "none";
+        
+        window.addFireworkExplosionRow = function(exp = null) {
+    const list = document.getElementById('item-firework-explosions-list');
+    if (!list) return;
+
+    // Detects if it's a Star to apply restrictions.
+    const isStarItem = item && item.Name && item.Name.value === "minecraft:firework_star";
+
+    const type = (exp && exp.FireworkType) ? exp.FireworkType.value : 0;
+    const flicker = (exp && exp.FireworkFlicker) ? exp.FireworkFlicker.value : 0;
+    const trail = (exp && exp.FireworkTrail) ? exp.FireworkTrail.value : 0;
+    
+    let colorID = 1;
+    if (exp && exp.FireworkColor && exp.FireworkColor.value && exp.FireworkColor.value.length > 0) {
+        colorID = exp.FireworkColor.value[0];
+    }
+
+    let fadeID = "none";
+    if (exp && exp.FireworkFade && exp.FireworkFade.value && exp.FireworkFade.value.length > 0) {
+        fadeID = exp.FireworkFade.value[0];
+    }
+
+    const div = document.createElement('div');
+    div.className = "explosion-row";
+    div.style = "padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 6px;";
+
+    const getColorOptions = (selected, hasNone) => {
+        let options = hasNone ? `<option value="none" ${selected === 'none' ? 'selected' : ''}>None</option>` : '';
+        const colors = (typeof data !== 'undefined' && data.banner_colors) ? data.banner_colors : [];
+        colors.forEach((name, id) => {
+            options += `<option value="${id}" ${selected !== 'none' && parseInt(selected) === id ? 'selected' : ''}>${id} - ${name}</option>`;
+        });
+        return options;
+    };
+
+    // Trash can logic: It doesn't appear in Star and it doesn't appear if it's the only item in the Rocket.
+    const canDelete = !isStarItem;
+        const iconTrash = "/assets/icons/icon_trash.png";
+    const trashBtn = canDelete ? `<img src="${typeof iconTrash !== 'undefined' ? iconTrash : ''}" 
+        style="width: 14px; height: 14px; cursor: pointer; opacity: 0.6;" 
+        onclick="if(document.querySelectorAll('.explosion-row').length > 1){ this.parentElement.parentElement.remove(); } else { snackbar('The fireworks need at least one explosion!'); }">` : '';
+
+    div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 10px; color: #888; font-weight: bold;">SHAPE:</span>
+            <select class="app-input fw-type" style="flex: 1; height: 22px; font-size: 11px;">
+                <option value="0" ${type==0?'selected':''}>Small Ball</option>
+                <option value="1" ${type==1?'selected':''}>Large Ball</option>
+                <option value="2" ${type==2?'selected':''}>Star Shape</option>
+                <option value="3" ${type==3?'selected':''}>Creeper Shape</option>
+                <option value="4" ${type==4?'selected':''}>Burst</option>
+            </select>
+            ${trashBtn}
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <div style="flex: 1;">
+                <div style="font-size: 9px; color: #aaa; margin-bottom: 2px; text-transform: uppercase;">Color</div>
+                <select class="app-input fw-color" style="width: 100%; height: 22px; font-size: 10px;">${getColorOptions(colorID, false)}</select>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-size: 9px; color: #aaa; margin-bottom: 2px; text-transform: uppercase;">Fade</div>
+                <select class="app-input fw-fade" style="width: 100%; height: 22px; font-size: 10px;">${getColorOptions(fadeID, true)}</select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 2px; background: rgba(0,0,0,0.1); padding: 4px; border-radius: 3px;">
+            <label style="font-size: 10px; color: #ccc; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" class="fw-flicker" ${flicker ? 'checked' : ''}> Twinkle
+            </label>
+            <label style="font-size: 10px; color: #ccc; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" class="fw-trail" ${trail ? 'checked' : ''}> Trail
+            </label>
+        </div>
+    `;
+    list.appendChild(div);
+};
+
+        const itemList = document.getElementById('item-firework-explosions-list');
+        if (itemList) itemList.innerHTML = "";
+
+        const itemTag = (item.tag && item.tag.value) ? item.tag.value : {};
+
+        if (isRocket) {
+            document.getElementById('firework-flight-section').style.display = "block";
+            document.getElementById('item-btn-add-explosion').style.display = "inline-block";
+
+            const fwData = (itemTag.Fireworks && itemTag.Fireworks.value) ? itemTag.Fireworks.value : {};
+            const flightInput = document.getElementById("item-firework-flight");
+            if (flightInput) flightInput.value = (fwData.Flight) ? fwData.Flight.value : 1;
+
+            if (fwData.Explosions && fwData.Explosions.value && fwData.Explosions.value.value) {
+                fwData.Explosions.value.value.forEach(exp => {
+                    window.addFireworkExplosionRow(exp.value || exp);
+                });
+            }
+        } else {
+            // Star (Fireworks Item)
+            document.getElementById('firework-flight-section').style.display = "none";
+            document.getElementById('item-btn-add-explosion').style.display = "none";
+            if (itemTag.FireworksItem && itemTag.FireworksItem.value) {
+                window.addFireworkExplosionRow(itemTag.FireworksItem.value);
+            }
+        }
+    } else {
+        if (fireworkTab) fireworkTab.style.display = "none";
+    }
+} catch (err) {
+    console.error("Erro ao carregar aba de Fireworks:", err);
+}
+  
+  // Banner tab
+const isBanner = item && item.Name && item.Name.value === "minecraft:banner";
+const isShield = item && item.Name && item.Name.value === "minecraft:shield";
+if (isBanner || isShield) {
+    document.getElementById("item-banner-tab").style.display = "unset";
+
+    const itemTag = (item.tag && item.tag.value) ? item.tag.value : {};
+
+    // Base color
+    let baseColor = 0;
+    if (isBanner) {
+        baseColor = item.Damage ? item.Damage.value : 0;
+    } else {
+        baseColor = itemTag.Base ? itemTag.Base.value : 0;
+    }
+    
+    const itemBaseSelect = document.getElementById("item-banner-base");
+    if (itemBaseSelect) itemBaseSelect.value = baseColor;
+    
+    const itemList = document.getElementById('item-banner-patterns-list');
+    if (itemList) {
+        itemList.innerHTML = ""; 
+        if (itemTag.Patterns && itemTag.Patterns.value && itemTag.Patterns.value.value) {
+            const patterns = itemTag.Patterns.value.value;
+            patterns.forEach(p => {
+                addBannerPatternRow(p.Pattern.value, p.Color.value);
+            });
+        }
+    }
+    
+    const typeCheck = document.getElementById("item-banner-type");
+    if (typeCheck) {
+        if (isBanner) {
+            typeCheck.checked = (itemTag.Type && itemTag.Type.value === 1);
+        } else {
+            const patterns = (itemTag.Patterns && itemTag.Patterns.value) ? itemTag.Patterns.value.value : [];
+            const hasOminousPattern = patterns.length > 0 && patterns[0].Pattern.value === "ill";
+            typeCheck.checked = hasOminousPattern;
+        }
+    }
+    
+    updateBannerPreview();
+
+} else {
+    if (document.getElementById("item-banner-tab")) {
+        document.getElementById("item-banner-tab").style.display = "none";
+    }
+}
+
   //Potion tab
-  if(tags.wasJustBrewed){
+const POTION_IDS = ["minecraft:potion", "minecraft:splash_potion", "minecraft:lingering_potion", "minecraft:arrow"];
+
+if(item && item.Name && (POTION_IDS.includes(item.Name.value) || tags.wasJustBrewed)){
     document.getElementById("item-potion-tab").style.display = "unset";
     
-    document.getElementById("item-potion-wasjustbrewed").checked = boolByte(tags.wasJustBrewed.value);
-  } else {
+    const isArrow = item.Name.value === "minecraft:arrow";
+    const potionSelect = document.getElementById("item-potion-effect-input");
+    
+    potionSelect.innerHTML = ""; 
+    for(let i = 0; i < data.potioneffects.length; i++){
+        
+        if (isArrow) {
+            document.getElementById("item-potion-warning").style.display = "none";
+            document.getElementById("item-arrow-warning").style.display = "block";
+            let opt = document.createElement("option");
+            opt.value = i; 
+            opt.innerHTML = data.potioneffects[i];
+            potionSelect.appendChild(opt);
+        } else {
+            document.getElementById("item-potion-warning").style.display = "block";
+            document.getElementById("item-arrow-warning").style.display = "none";
+            if (data.potioneffects[i].toLowerCase() !== "none") {
+                let opt = document.createElement("option");
+                opt.value = i - 1; 
+                opt.innerHTML = data.potioneffects[i];
+                potionSelect.appendChild(opt);
+            }
+        }
+    }
+    
+    potionSelect.value = item.Damage ? item.Damage.value : 0;
+
+    // Hide the checkbox if it's an arrow.
+    const brewContainer = document.getElementById("item-potion-wasjustbrewed").parentElement;
+    if (brewContainer) {
+        brewContainer.style.display = isArrow ? "none" : "block";
+    }
+    
+    if(tags.wasJustBrewed){
+        document.getElementById("item-potion-wasjustbrewed").checked = boolByte(tags.wasJustBrewed.value);
+    } else {
+        document.getElementById("item-potion-wasjustbrewed").checked = false;
+    }
+} else {
     document.getElementById("item-potion-tab").style.display = "none";
-  }
+}
   
   //Book tab
   if(tags.pages){
@@ -260,6 +758,63 @@ function openItemEditor(){
   } else {
     document.getElementById("item-book-tab").style.display = "none";
   }
+  
+  // Bundle Tab
+const hasStorageTag = tags.storage_item_component_content;
+const isKnownBundle = currentItem.Name && currentItem.Name.value.includes("bundle");
+
+if (hasStorageTag || isKnownBundle) {
+    if (!tags.storage_item_component_content) {
+        tags.storage_item_component_content = {
+            type: "list",
+            value: {
+                type: "compound",
+                value: Array.from({ length: 64 }, (_, i) => ({
+                    Count: { type: "byte", value: 0 },
+                    Damage: { type: "short", value: 0 },
+                    Name: { type: "string", value: "" },
+                    Slot: { type: "byte", value: i },
+                    WasPickedUp: { type: "byte", value: 0 }
+                }))
+            }
+        };
+    }
+    
+    if (!tags.bundle_weight) {
+        tags.bundle_weight = { type: "int", value: 0 };
+    }
+    
+    document.getElementById("item-bundle-tab").style.display = "unset";
+
+    const bundleTableBody = document.getElementById("item-bundle-slots-tbody");
+    const bundleItems = tags.storage_item_component_content.value.value;
+    
+    bundleTableBody.innerHTML = "";
+    let slotIndex = 0;
+    
+    for (let r = 0; r < 8; r++) {
+        let row = bundleTableBody.insertRow();
+        for (let c = 0; c < 8; c++) {
+            let cell = row.insertCell();
+            
+            cell.setAttribute("domain", `currentItem.tag.value.storage_item_component_content.value.value[${slotIndex}]`);
+            cell.setAttribute("onclick", "openEditItem(this.getAttribute('domain'))");
+            
+            slotIndex++;
+        }
+    }
+    
+    fillItemSlots(bundleItems, document.getElementById("item-bundle-slots-table"));
+
+    if (typeof mcitems !== 'undefined') mcitems.init();
+    
+    document.getElementById("item-bundle-weight").value = tags.bundle_weight.value;
+
+} else {
+    if(document.getElementById("item-bundle-tab")) {
+        document.getElementById("item-bundle-tab").style.display = "none";
+    }
+}
   
   //Crossbow tab
   if(tags.chargedItem){
@@ -271,22 +826,49 @@ function openItemEditor(){
     document.getElementById("item-crossbow-tab").style.display = "none";
   }
   
-  //Armor tab
-  if(tags.Trim || tags.customColor){
-    document.getElementById("item-armor-tab").style.display = "unset";
-    if(tags.Trim) {
-      document.getElementById("item-armor-trimgroup").style.display = "table-cell";
+  
+  // Armor tab
+  const isDyeable = data.dyeable_items.includes(item.Name.value);
+const isTrimmable = data.trimmable_armors.includes(item.Name.value);
+
+if (tags.Trim || tags.customColor || isDyeable || isTrimmable) {
+  document.getElementById("item-armor-tab").style.display = "unset";
+
+  // 2. Trim Group
+  if (tags.Trim || isTrimmable) {
+    document.getElementById("item-armor-trimgroup").style.display = "table-cell";
+    
+    if (tags.Trim) {
       document.getElementById("item-armor-trim-pattern").value = tags.Trim.value.Pattern.value;
       document.getElementById("item-armor-trim-material").value = tags.Trim.value.Material.value;
     } else {
-      document.getElementById("item-armor-trimgroup").style.display = "none";
+      document.getElementById("item-armor-trim-pattern").value = "none";
+      document.getElementById("item-armor-trim-material").value = "none";
     }
-    if(tags.customColor) {
+  } else {
+    document.getElementById("item-armor-trimgroup").style.display = "none";
+  }
+
+    // 3. Color Group
+    if (tags.customColor || isDyeable) {
       document.getElementById("item-armor-leathergroup").style.display = "table-cell";
-      document.getElementById("item-armor-customcolor").value = datHandler.argb.intToHex(tags.customColor.value, true);
+      
+    const addContainer = document.getElementById("item-armor-color-add");
+    const controlsContainer = document.getElementById("item-armor-color-controls");
+
+    if (tags.customColor) {
+        addContainer.style.display = "none";
+        controlsContainer.style.display = "block";
+        document.getElementById("item-armor-customcolor").value = datHandler.argb.intToHex(tags.customColor.value, true);
     } else {
-      document.getElementById("item-armor-leathergroup").style.display = "none";
+        addContainer.style.display = "block";
+        controlsContainer.style.display = "none";
+        document.getElementById("item-armor-customcolor").value = "#FFFFFF";
     }
+} else {
+    document.getElementById("item-armor-leathergroup").style.display = "none";
+}
+
     mcitems.init();
   } else {
     document.getElementById("item-armor-tab").style.display = "none";
@@ -542,7 +1124,7 @@ function selectPaletteEntryElement(myel){
   myel.classList.toggle("selected", true)
 }
 
-function createPaletteEntryElement(validpalettedata = {"name":"minecraft:air[]","image":"https://cdn.glitch.global/17ff8eee-9239-4ba0-8a5c-9263261550b5/0fa3c5fa-4760-4f85-babe-45b343605f9a.image.png","imageid":0,"data":{"name":{"type":"string","value":"minecraft:air"},"states":{"type":"compound","value":{}},"version":{"type":"int","value":17879555}}}, domain){
+function createPaletteEntryElement(validpalettedata = {"name":"minecraft:air[]","image":"/assets/empty.png","imageid":0,"data":{"name":{"type":"string","value":"minecraft:air"},"states":{"type":"compound","value":{}},"version":{"type":"int","value":17879555}}}, domain){
   let container = document.createElement("div");
   container.classList = ["app-inner-inner idlabel"];
   let image = createBlockPreview(validpalettedata.image, validpalettedata.imageid)
@@ -559,7 +1141,7 @@ function createPaletteEntryElement(validpalettedata = {"name":"minecraft:air[]",
   
   let optionsbutton = document.createElement("img");
   optionsbutton.classList = ["minibutton"]
-  optionsbutton.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_setting.png";
+  optionsbutton.src = "/assets/icons/icon_setting.png";
   optionsbutton.onclick = function(){
     openEditBlock("getValidPalette(getPalette())["+ domain +"].data")
   }
@@ -567,7 +1149,7 @@ function createPaletteEntryElement(validpalettedata = {"name":"minecraft:air[]",
   
   let trashbutton = document.createElement("img");
   trashbutton.classList = ["minibutton"]
-  trashbutton.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  trashbutton.src = "/assets/icons/icon_trash.png";
   trashbutton.onclick = function(){
     getPalette().splice(domain, 1)
     //TODO: filter through all placed blocks and change previous instances to structure void, and -1 from each that are greater than the deleted entry
@@ -590,7 +1172,7 @@ function createEffectItem(effectdata = {"Ambient":{"type":"byte","value":0},"Amp
     
   let effecttrash = document.createElement("img")
   effecttrash.classList = ["minibutton"];
-  effecttrash.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  effecttrash.src = "/assets/icons/icon_trash.png";
   effecttrash.style = "height:100%";
   effecttrash.onclick = function(){
     this.parentNode.parentNode.removeChild(this.parentNode);
@@ -634,13 +1216,14 @@ function createEffectItem(effectdata = {"Ambient":{"type":"byte","value":0},"Amp
   return effectel;
 }
 
+
 function createEnchantmentItem(enchantdata = {"id": {"type": "short","value": -1},"lvl": {"type": "short","value": 1}}){
   //Responsible for creating a <div> element capable of being entered into an effect-list
   let enchantel = document.createElement("div");
     
   let enchanttrash = document.createElement("img")
   enchanttrash.classList = ["minibutton"];
-  enchanttrash.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  enchanttrash.src = "/assets/icons/icon_trash.png";
   enchanttrash.style = "height:100%";
   enchanttrash.onclick = function(){
     this.parentNode.parentNode.removeChild(this.parentNode);
@@ -686,24 +1269,65 @@ function createItemElement(itemdata){
   if(!itemdata.Name) return document.createElement("empty");
   if(itemdata.Count && itemdata.Count.value < 1) return document.createElement("empty");
   
-  let name = itemdata.Name.value;
+  let baseName = itemdata.Name.value; 
   let count = itemdata.Count.value;
   let tags = (itemdata.hasOwnProperty("tag") ? itemdata.tag.value : {});
-  let damage = (tags.Damage ? itemdata.Damage.value : false);
-  let enchanted = tags.hasOwnProperty("ench"); //TODO: list enchantment data
-  //TODO: item custom names, ect.
+  let customName = null;
+  if (tags.display && tags.display.value.Name) {
+    customName = tags.display.value.Name.value;
+  }
+  
+  let rootDamage = itemdata.Damage ? itemdata.Damage.value : 0;          // data/metadata
+  let durabilityDamage = (tags.Damage ? tags.Damage.value : 0);         // durability
+  
+  let enchanted = tags.hasOwnProperty("ench");
+  
+  let enchantments = [];
+  if (tags.ench && tags.ench.value && tags.ench.value.value) {
+    let list = tags.ench.value.value; // Here we get the actual array []
+    
+    if (Array.isArray(list)) {
+      enchantments = list.map(enc => {
+        return {
+          id: enc.id.value,    // id: 1
+          level: enc.lvl.value // lvl: 3
+        };
+      });
+    }
+  }
+  
+  // If rootDamage >0, "inject" it into the identifier as :data
+  let finalIdentifier = baseName;
+  if (rootDamage > 0) {
+    finalIdentifier += ":" + rootDamage;  // turn into "minecraft:potion:5"
+  }
   
   let itemelement = document.createElement("mcitem");
-  itemelement.setAttribute("identifier", name);
+  itemelement.setAttribute("identifier", finalIdentifier); 
   itemelement.setAttribute("count", count);
+  
+  if (customName) {
+    itemelement.setAttribute("custom-name", customName);
+  }
+  
+  // Durability bar
+  if (durabilityDamage > 0) {
+    itemelement.setAttribute("damage", durabilityDamage);
+  }
+  
+  if (rootDamage > 0) {
+    itemelement.setAttribute("data", rootDamage);
+  }
+  
+  if (enchantments.length > 0) {
+  itemelement.setAttribute("enchantments", JSON.stringify(enchantments));
+}
+  
   itemelement.setAttribute("width", "27px");
   itemelement.setAttribute("height", "27px");
-  itemelement.classList = ["nohover hovertooltip"];
-  itemelement.classList.toggle("enchanted", enchanted)
+  itemelement.classList.add("nohover", "hovertooltip");
+  itemelement.classList.toggle("enchanted", enchanted);
   itemelement.style.fontSize = "9pt";
-  if(damage){
-    itemelement.setAttribute("damage", damage);
-  }
   
   return itemelement;
 }
@@ -718,7 +1342,7 @@ function createNPCActionElement(actiondata = {"button_name":"","data":[{"cmd_lin
   
   let trashbtn = document.createElement("img")
   trashbtn.classList = ["minibutton"];
-  trashbtn.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  trashbtn.src = "/assets/icons/icon_trash.png";
   trashbtn.style = "height:100%";
   trashbtn.onclick = function(){
     this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
@@ -783,7 +1407,7 @@ function createBlockstateEntry(statedata = {name: "", data: {type: "string", val
   
   let trashbtn = document.createElement("img")
   trashbtn.classList = ["minibutton"];
-  trashbtn.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  trashbtn.src = "/assets/icons/icon_trash.png";
   trashbtn.style = "height:100%";
   trashbtn.onclick = function(){
     this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
@@ -879,7 +1503,7 @@ function createBeehiveEntity(entitydata = {identifier: 'minecraft:bee', ticksrem
   
   let trashbtn = document.createElement("img")
   trashbtn.classList = ["minibutton"];
-  trashbtn.src = "https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Ficon_trash.png";
+  trashbtn.src = "/assets/icons/icon_trash.png";
   trashbtn.style = "height:100%";
   trashbtn.onclick = function(){
     this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
@@ -1223,10 +1847,25 @@ function openTileEntityEditor(){
       break;
     }
     case 'banner': {
-      document.getElementById("tentity-banner-type").checked = tileEntity.Type.value;
-      document.getElementById("tentity-banner-base").value = tileEntity.Base.value;
-      break;
+    document.getElementById("tentity-banner-base").value = tileEntity.Base.value;
+    document.getElementById("tentity-banner-type").checked = tileEntity.Type.value === 1;
+    
+    const list = document.getElementById('tentity-banner-patterns-list');
+    if (list) {
+        list.innerHTML = "";
+        
+        const patterns = tileEntity.Patterns?.value?.value || tileEntity.Patterns?.value;
+        
+        if (Array.isArray(patterns)) {
+            patterns.forEach(p => {
+                addBannerPatternRow(p.Pattern.value, p.Color.value);
+            });
+        }
     }
+    
+    updateBannerPreview(); 
+    break;
+}
     case 'flowerpot': {
       document.getElementById("tentity-flowerpot-name").value = tileEntity.hasOwnProperty("PlantBlock") ? tileEntity.PlantBlock.value.name.value : '';
       //TODO: Flowerpot BLockstates
@@ -1349,6 +1988,18 @@ function openTileEntityEditor(){
       break;
     }
     case 'decoratedpot': {
+    	document.getElementById("tentity-decoratedpot-item").innerHTML = ""; 
+    
+    if(tileEntity.item){
+        // Uses the same function as the Item Frame to create the visual icon.
+        document.getElementById("tentity-decoratedpot-item").appendChild(createItemElement(tileEntity.item.value));
+    }
+    document.getElementById("tentity-decoratedpot-loottable").value = currentValidTile.data.hasOwnProperty("LootTable") ? currentValidTile.data.LootTable.value : "";
+    document.getElementById("tentity-decoratedpot-loottableseed").value = currentValidTile.data.hasOwnProperty("LootTableSeed") ? currentValidTile.data.LootTableSeed.value : "";
+    
+    // If there is any logic to Sherds (shards), it continues here...
+    
+    mcitems.init(); // Updates textures on screen
       let sherds = tileEntity.sherds.value.value;
       
       document.getElementById("tentity-decoratedpot-sherd0").value = sherds[0];
@@ -1367,6 +2018,276 @@ function openTileEntityEditor(){
       
       break;
     }
+    case 'coppergolemstatue': {
+  // 1. Charge the Pose
+  document.getElementById("tentity-coppergolemstatue-pose").value = tileEntity.Pose ? tileEntity.Pose.value : 0;
+
+  // 2. Load the Actor ID
+  let actorId = "minecraft:copper_golem"; // Default value
+  if (tileEntity.Actor && tileEntity.Actor.value.ActorIdentifier) {
+    actorId = tileEntity.Actor.value.ActorIdentifier.value;
+  }
+  document.getElementById("tentity-coppergolemstatue-actorid").value = actorId;
+  
+  break;
+}
+case 'crafter': {
+  // 1. Bitwise logic (Checkboxes)
+  let mask = tileEntity.disabled_slots ? tileEntity.disabled_slots.value : 0;
+  for (let i = 0; i < 9; i++) {
+    document.getElementById(`crafter-slot-${i}`).checked = (mask & (1 << i)) !== 0;
+  }
+
+  // 2. Prepare the item structure for HTML.
+  if (!tileEntity.Items) {
+    tileEntity.Items = { type: 'list', value: { type: 'compound', value: [] } };
+  }
+
+  let itemsArray = tileEntity.Items.value.value;
+  
+  for (let i = 0; i < 9; i++) {
+    let exists = itemsArray.find(item => item.Slot && item.Slot.value === i);
+    if (!exists) {
+      itemsArray.push({
+        Slot: { type: 'byte', value: i },
+        Name: { type: 'string', value: '' },
+        Count: { type: 'byte', value: 0 },
+        Damage: { type: 'short', value: 0 }
+      });
+    }
+  }
+  
+  itemsArray.sort((a, b) => a.Slot.value - b.Slot.value);
+  
+  let container = document.getElementById("tentity-crafter-items");
+  for(let td of container.querySelectorAll("td")) td.innerHTML = "";
+  
+  fillItemSlots(itemsArray, container);
+  mcitems.init();
+  break;
+}
+case 'shelfblock': {
+    if (!tileEntity.Items) {
+        tileEntity.Items = { type: 'list', value: { type: 'compound', value: [] } };
+    }
+
+    let itemsArray = tileEntity.Items.value.value;
+    
+    while (itemsArray.length < 3) {
+        itemsArray.push({
+            Name: { type: 'string', value: "" },
+            Count: { type: 'byte', value: 0 },
+            Damage: { type: 'short', value: 0 },
+            WasPickedUp: { type: 'byte', value: 0 }
+        });
+    }
+    
+    let container = document.getElementById("tentity-shelfblock-items");
+    for(let td of container.querySelectorAll("td")) td.innerHTML = "";
+    fillItemSlots(itemsArray, container);
+    mcitems.init();
+    break;
+}
+case 'chiseledbookshelf': {
+    const shelfTable = document.getElementById("tentity-chiseledbookshelf-slot");
+    
+    if (shelfTable) {
+        const tds = shelfTable.getElementsByTagName('td');
+        for (let td of tds) {
+            td.innerHTML = "";
+        }
+    }
+    
+    if (!tileEntity.Items || !tileEntity.Items.value || !tileEntity.Items.value.value || tileEntity.Items.value.value.length === 0) {
+        tileEntity.Items = {
+            type: "list",
+            value: {
+                type: "compound",
+                value: Array.from({ length: 6 }, () => ({
+                    Count: { type: "byte", value: 0 },
+                    Damage: { type: "short", value: 0 },
+                    Name: { type: "string", value: "" },
+                    WasPickedUp: { type: "byte", value: 0 }
+                }))
+            }
+        };
+    }
+    
+    let bookshelfItems = tileEntity.Items.value.value;
+    
+    fillItemSlots(bookshelfItems, shelfTable);
+    
+    if (typeof mcitems !== 'undefined') mcitems.init();
+    
+    break;
+}
+case 'vault': {
+    document.getElementById("tentity-vault-key-item").innerHTML = ""; 
+    
+    let vConfig = tileEntity.config.value;
+    let vStateData = tileEntity.data.value;
+    
+    document.getElementById("tentity-vault-loot-table").value = vConfig.loot_table.value;
+    document.getElementById("tentity-vault-display-loot").value = vConfig.override_loot_table_to_display.value;
+    document.getElementById("tentity-vault-act-range").value = vConfig.activation_range.value;
+    document.getElementById("tentity-vault-deact-range").value = vConfig.deactivation_range.value;
+    
+    if(vConfig.key_item && vConfig.key_item.value){
+        document.getElementById("tentity-vault-key-item").appendChild(createItemElement(vConfig.key_item.value));
+    }
+    
+    mcitems.init();
+    
+    let playerCount = 0;
+    try {
+        playerCount = vStateData.rewarded_players.value.value.length;
+    } catch(e) {
+        playerCount = 0;
+    }
+    
+    document.getElementById("tentity-vault-player-count").innerText = playerCount;
+    
+    document.getElementById("tentity-vault-reset-players").onclick = function() {
+    let currentList = vStateData.rewarded_players.value.value;
+    
+    if (!currentList || currentList.length === 0) {
+        if(typeof snackbar === "function") {
+            snackbar("The rewarded players list is already empty!");
+        }
+        return;
+    }
+    
+    if(confirm("Clear rewarded players? This action will be saved instantly.")) {
+        if(tileEntity.data && vStateData.rewarded_players) {
+            vStateData.rewarded_players.value.value = [];
+            document.getElementById("tentity-vault-player-count").innerText = "0"; 
+            if(typeof snackbar === "function") snackbar("Players list cleared!");
+        }
+    }
+};
+    break;
+}
+case 'tspawner': {
+    const selector = document.getElementById('tentity-tspawner-mode-selector');
+    const iconTrash = "/assets/icons/icon_trash.png";
+
+    // --- 1. INTERFACE FUNCTIONS ---
+
+    window.addTrialMobRow = function(modeSuffix, id = "", weight = 1, equip = "", drops = {}) {
+        if (!modeSuffix || typeof modeSuffix !== 'string') {
+            modeSuffix = (selector.value === 'normal_config') ? 'normal' : 'ominous';
+        }
+        const container = document.getElementById(`mob-container-${modeSuffix}`);
+        if (!container) return;
+        
+        const d = {
+            h: drops.head ?? "", c: drops.chest ?? "", l: drops.legs ?? "", 
+            f: drops.feet ?? "", m: drops.mainhand ?? "", o: drops.offhand ?? ""
+        };
+        const displayStyle = (equip && equip.trim() !== "") ? "grid" : "none";
+
+        const div = document.createElement('div');
+        div.className = "trial-row-item";
+        div.style = "display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);";
+        div.innerHTML = `
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <input type="text" class="app-input mob-id" value="${id}" style="flex: 4;" placeholder="minecraft:zombie" list="ids-entity">
+                <input type="number" class="app-input mob-weight" value="${weight}" style="flex: 1; min-width: 45px;" title="Weight">
+                <img src="${iconTrash}" style="width: 18px; height: 18px; cursor: pointer; opacity: 0.6;" onclick="this.parentElement.parentElement.remove()">
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 10px; color: #ccc;">Equip:</span>
+                <input type="text" class="app-input mob-equip" value="${equip}" style="width: 100%; font-size: 11px; height: 22px; border-style: dashed; border-color: #444;" 
+                       placeholder="loot_tables/equipment/trial_chamber_iron.json" oninput="this.parentElement.nextElementSibling.style.display = this.value.trim() !== '' ? 'grid' : 'none';">
+            </div>
+            
+            <div class="drop-chances-container" style="display: ${displayStyle}; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
+                <div style="grid-column: span 3; text-align: center; margin-bottom: 4px; background: rgba(255, 170, 0, 0.1); border-radius: 2px;">
+                    <span style="font-size: 9px; color: #ffaa00; font-weight: bold; letter-spacing: 0.5px;">DROP CHANCES (0.0 to 1.0)</span>
+                </div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">HEAD</span><input type="number" step="0.1" class="app-input drop-head" value="${d.h}" style="font-size:10px; height:18px; padding:2px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">CHEST</span><input type="number" step="0.1" class="app-input drop-chest" value="${d.c}" style="font-size:10px; height:18px; padding:2px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">LEGS</span><input type="number" step="0.1" class="app-input drop-legs" value="${d.l}" style="font-size:10px; height:18px; padding:2px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">FEET</span><input type="number" step="0.1" class="app-input drop-feet" value="${d.f}" style="font-size:10px; height:18px; padding:2px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">MAINH</span><input type="number" step="0.1" class="app-input drop-mainhand" value="${d.m}" style="font-size:10px; height:18px; padding:2px;"></div>
+                <div style="display:flex; flex-direction:column;"><span style="font-size:8px; color:#ccc;">OFFH</span><input type="number" step="0.1" class="app-input drop-offhand" value="${d.o}" style="font-size:10px; height:18px; padding:2px;"></div>
+            </div>`;
+        container.appendChild(div);
+    };
+
+    window.addTrialLootRow = function(modeSuffix, path = "", weight = 1) {
+        if (!modeSuffix || typeof modeSuffix !== 'string') {
+            modeSuffix = (selector.value === 'normal_config') ? 'normal' : 'ominous';
+        }
+        const container = document.getElementById(`loot-container-${modeSuffix}`);
+        if (!container) return;
+        const div = document.createElement('div');
+        div.style = "display: flex; gap: 4px; margin-bottom: 5px; align-items: center;";
+        div.innerHTML = `
+            <input type="text" class="app-input loot-path" value="${path}" style="flex: 4;" placeholder="loot_table path...">
+            <input type="number" class="app-input loot-weight" value="${weight}" style="flex: 1; min-width: 50px;">
+            <img src="${iconTrash}" style="width: 20px; height: 20px; cursor: pointer;" onclick="this.parentElement.remove()">`;
+        container.appendChild(div);
+    };
+    
+
+    document.getElementById('mob-container-normal').innerHTML = "";
+    document.getElementById('mob-container-ominous').innerHTML = "";
+    document.getElementById('loot-container-normal').innerHTML = "";
+    document.getElementById('loot-container-ominous').innerHTML = "";
+    
+
+    document.getElementById("tentity-tspawner-player-range").value = tileEntity.required_player_range?.value ?? 14;
+    document.getElementById("tentity-tspawner-ominous-drop").value = tileEntity.normal_config?.value?.items_to_drop_when_ominous?.value || "";
+
+    // --- 2. NORMAL VS OMINOUS DISTRIBUTION ---
+
+    ['normal_config', 'ominous_config'].forEach(mKey => {
+        const cfg = tileEntity[mKey]?.value || {};
+        const sfx = (mKey === 'normal_config') ? 'n' : 'o'; 
+        const cSfx = (mKey === 'normal_config') ? 'normal' : 'ominous';
+        
+        document.getElementById(`tentity-tspawner-total-${sfx}`).value = cfg.total_mobs?.value ?? "";
+        document.getElementById(`tentity-tspawner-total-extra-${sfx}`).value = cfg.total_mobs_added_per_player?.value ?? "";
+        document.getElementById(`tentity-tspawner-sim-${sfx}`).value = cfg.simultaneous_mobs?.value ?? "";
+        document.getElementById(`tentity-tspawner-sim-extra-${sfx}`).value = cfg.simultaneous_mobs_added_per_player?.value ?? "";
+        document.getElementById(`tentity-tspawner-range-${sfx}`).value = cfg.spawn_range?.value ?? "";
+        document.getElementById(`tentity-tspawner-ticks-${sfx}`).value = cfg.ticks_between_spawn?.value ?? "";
+        document.getElementById(`tentity-tspawner-cooldown-${sfx}`).value = cfg.target_cooldown_length?.value ?? "";
+        
+        const pots = cfg.spawn_potentials?.value?.value || [];
+        pots.forEach(p => {
+            const mobId = p.data?.value?.entity?.value?.id?.value || "";
+            const equipObj = p.data?.value?.equipment?.value || {};
+            const dropObj = equipObj.slot_drop_chances?.value || {};
+            
+            const currentDrops = {
+                head: dropObj.head?.value ?? "",
+                chest: dropObj.chest?.value ?? "",
+                legs: dropObj.legs?.value ?? "",
+                feet: dropObj.feet?.value ?? "",
+                mainhand: dropObj.mainhand?.value ?? "",
+                offhand: dropObj.offhand?.value ?? ""
+            };
+
+            addTrialMobRow(cSfx, mobId, p.weight?.value || 1, equipObj.loot_table?.value || "", currentDrops);
+        });
+        
+        const rewards = cfg.loot_tables_to_eject?.value?.value || [];
+        rewards.forEach(r => addTrialLootRow(cSfx, r.data?.value || "", r.weight?.value || 1));
+    });
+
+    // --- 3. MODE SELECTOR CONTROL  ---
+
+    selector.onchange = function() {
+        const isNormal = (selector.value === 'normal_config');
+        document.querySelectorAll('.trial-section-normal').forEach(el => el.style.display = isNormal ? 'block' : 'none');
+        document.querySelectorAll('.trial-section-ominous').forEach(el => el.style.display = isNormal ? 'none' : 'block');
+    };
+    selector.onchange();
+
+    break;
+}
   }
 }
 
@@ -1841,28 +2762,58 @@ function saveTileEntity(){
       break;
     }
     case 'spawner': {
-      document.getElementById("tentity-spawner-identifier").value = tileEntity.EntityIdentifier.value;
-      document.getElementById("tentity-spawner-delay").value = parseFloat(tileEntity.Delay.value);
-      document.getElementById("tentity-spawner-delay-min").value = parseFloat(tileEntity.MinSpawnDelay.value);
-      document.getElementById("tentity-spawner-delay-max").value = parseFloat(tileEntity.MaxSpawnDelay.value);
-      document.getElementById("tentity-spawner-spawncount").value = parseFloat(tileEntity.SpawnCount.value);
-      document.getElementById("tentity-spawner-maxnearbyentities").value = parseFloat(tileEntity.MaxNearbyEntities.value);
-      document.getElementById("tentity-spawner-requiredplayerrange").value = parseFloat(tileEntity.RequiredPlayerRange.value);
-      document.getElementById("tentity-spawner-spawnrange").value = parseFloat(tileEntity.SpawnRange.value);
-      document.getElementById("tentity-spawner-display-width").value = parseFloat(tileEntity.DisplayEntityWidth.value);
-      document.getElementById("tentity-spawner-display-height").value = parseFloat(tileEntity.DisplayEntityHeight.value);
-      document.getElementById("tentity-spawner-display-scale").value = parseFloat(tileEntity.DisplayEntityScale.value);
-      break;
+      // SAVE: The object's value receives what is in the screen input.
+      tileEntity.EntityIdentifier.value = document.getElementById("tentity-spawner-identifier").value;
+      tileEntity.Delay.value = parseFloat(document.getElementById("tentity-spawner-delay").value);
+      tileEntity.MinSpawnDelay.value = parseFloat(document.getElementById("tentity-spawner-delay-min").value);
+      tileEntity.MaxSpawnDelay.value = parseFloat(document.getElementById("tentity-spawner-delay-max").value);
+      tileEntity.SpawnCount.value = parseFloat(document.getElementById("tentity-spawner-spawncount").value);
+      tileEntity.MaxNearbyEntities.value = parseFloat(document.getElementById("tentity-spawner-maxnearbyentities").value);
+      tileEntity.RequiredPlayerRange.value = parseFloat(document.getElementById("tentity-spawner-requiredplayerrange").value);
+      tileEntity.SpawnRange.value = parseFloat(document.getElementById("tentity-spawner-spawnrange").value);
+      // Verification for display fields (prevents errors if they do not exist in the NBT)
+      if(tileEntity.DisplayEntityWidth) tileEntity.DisplayEntityWidth.value = parseFloat(document.getElementById("tentity-spawner-display-width").value);
+      if(tileEntity.DisplayEntityHeight) tileEntity.DisplayEntityHeight.value = parseFloat(document.getElementById("tentity-spawner-display-height").value);
+      if(tileEntity.DisplayEntityScale) tileEntity.DisplayEntityScale.value = parseFloat(document.getElementById("tentity-spawner-display-scale").value);
     }
     case 'noteblock': {
       tileEntity.note.value = parseFloat(document.getElementById("tentity-noteblock-note").value);
       break;
     }
     case 'banner': {
-      tileEntity.Type.value = boolByte(document.getElementById("tentity-banner-type").checked);
-      tileEntity.Base.value = parseFloat(document.getElementById("tentity-banner-base").value);
-      break;
+    const isOminous = document.getElementById("tentity-banner-type").checked;
+    tileEntity.Type = { type: "int", value: isOminous ? 1 : 0 };
+    
+    const baseColor = parseInt(document.getElementById("tentity-banner-base").value) || 0;
+    tileEntity.Base = { type: "int", value: baseColor };
+    
+    const patternRows = document.querySelectorAll('#tentity-banner-patterns-list > div');
+    let patternsNBT = [];
+    
+    if (!isOminous) {
+        patternRows.forEach(row => {
+            const sigla = row.querySelector('.p-sel').value;
+            const cor = parseInt(row.querySelector('.c-sel').value);
+
+            if (sigla !== "none") {
+                patternsNBT.push({
+                    "Color": { type: "int", value: cor },
+                    "Pattern": { type: "string", value: sigla }
+                });
+            }
+        });
     }
+    
+    tileEntity.Patterns = {
+        type: "list",
+        value: {
+            type: "compound",
+            value: patternsNBT
+        }
+    };
+
+    break;
+}
     case 'flowerpot': {
       //document.getElementById("tentity-flowerpot-name").value = tileEntity.hasOwnProperty("PlantBlock") ? tileEntity.PlantBlock.value.name.value : '';
       //TODO: save flowerpot
@@ -1929,7 +2880,24 @@ function saveTileEntity(){
       }
       break;
     }
-    case 'decoratedpot': {      
+    case 'decoratedpot': {
+    	if(document.getElementById("tentity-decoratedpot-loottable").value != ""){
+        currentValidTile.data.LootTable = {
+          "type": "string",
+          "value": document.getElementById("tentity-decoratedpot-loottable").value
+        }
+      } else {
+        delete currentValidTile.data.LootTable;
+      }
+      
+      if(document.getElementById("tentity-decoratedpot-loottable").value != ""){
+        currentValidTile.data.LootTableSeed = {
+          "type": "int",
+          "value": parseFloat(document.getElementById("tentity-decoratedpot-loottableseed").value)
+        }
+      } else {
+        delete currentValidTile.data.LootTableSeed;
+      }
       tileEntity.sherds = nbt.list(nbt.string([
         document.getElementById("tentity-decoratedpot-sherd0").value,
         document.getElementById("tentity-decoratedpot-sherd1").value,
@@ -1949,6 +2917,223 @@ function saveTileEntity(){
       tileEntity.LootTableSeed = nbt.int(parseFloat(document.getElementById("tentity-brushable-loottableseed").value));
       break;
     }
+    case 'coppergolemstatue': {
+  // Save the Pose
+  tileEntity.Pose = nbt.int(parseInt(document.getElementById("tentity-coppergolemstatue-pose").value));
+
+  // Saves the entered Actor ID
+  let actorIdInput = document.getElementById("tentity-coppergolemstatue-actorid").value;
+  
+  if (!tileEntity.Actor) {
+    // If the Actor tag doesn't exist, create it from scratch with the entered ID.
+    tileEntity.Actor = nbt.compound({
+      ActorIdentifier: nbt.string(actorIdInput)
+    });
+  } else {
+   // If it already existed, simply update the ID within it.
+    tileEntity.Actor.value.ActorIdentifier = nbt.string(actorIdInput);
+  }
+  break;
+}
+case 'crafter': {
+  let mask = 0;
+  
+  // Iterates through the 9 checkboxes and reconstructs the binary number (bitmask)
+  for (let i = 0; i < 9; i++) {
+    const checkbox = document.getElementById(`crafter-slot-${i}`);
+    if (checkbox && checkbox.checked) {
+      // Adds the value corresponding to the slot bit (1, 2, 4, 8, 16, etc.)
+      mask |= (1 << i);
+    }
+  }
+
+  // Saved in NBT as type SHORT, as required by the Bedrock Wiki.
+  tileEntity.disabled_slots = nbt.short(mask);
+  
+  break;
+}
+case 'vault': {
+        let vConfig = currentValidTile.data.config.value;
+        vConfig.loot_table.value = document.getElementById("tentity-vault-loot-table").value;
+        vConfig.override_loot_table_to_display.value = document.getElementById("tentity-vault-display-loot").value;
+        let actRange = document.getElementById("tentity-vault-act-range").value;
+        let deactRange = document.getElementById("tentity-vault-deact-range").value;
+        vConfig.activation_range.value = parseFloat(actRange) || 4.0;
+        vConfig.deactivation_range.value = parseFloat(deactRange) || 4.5;
+        
+    break;
+}
+case 'tspawner': {
+    tileEntity.required_player_range = { 
+        type: "int", 
+        value: parseInt(document.getElementById("tentity-tspawner-player-range").value) || 14 
+    };
+    
+    const getListFromUI = (containerId, isMob) => {
+        const container = document.getElementById(containerId);
+        if (!container) return { type: "list", value: { type: "compound", value: [] } };
+        const rows = container.children;
+        let list = [];
+
+        for (let row of rows) {
+            if (isMob) {
+                const id = row.querySelector('.mob-id')?.value || "";
+                const weight = parseInt(row.querySelector('.mob-weight')?.value) || 1;
+                const equip = row.querySelector('.mob-equip')?.value || "";
+                
+                let mobCompound = {
+                    data: {
+                        type: "compound",
+                        value: {
+                            entity: {
+                                type: "compound",
+                                value: {
+                                    id: { type: "string", value: id }
+                                }
+                            }
+                        }
+                    },
+                    weight: { type: "int", value: weight }
+                };
+                
+                if (equip.trim() !== "") {
+                    mobCompound.data.value.equipment = {
+                        type: "compound",
+                        value: {
+                            loot_table: { type: "string", value: equip }
+                        }
+                    };
+                    
+                    const getDropVal = (sel) => {
+                        const val = row.querySelector(sel)?.value;
+                        return (val !== "" && val !== undefined) ? { type: "float", value: parseFloat(val) } : null;
+                    };
+
+                    const chances = {
+                        head: getDropVal('.drop-head'),
+                        chest: getDropVal('.drop-chest'),
+                        legs: getDropVal('.drop-legs'),
+                        feet: getDropVal('.drop-feet'),
+                        mainhand: getDropVal('.drop-mainhand'),
+                        offhand: getDropVal('.drop-offhand')
+                    };
+                    
+                    const hasAnyDrop = Object.values(chances).some(v => v !== null);
+                    if (hasAnyDrop) {
+                        let dropCompound = {};
+                        for (let slot in chances) {
+                            if (chances[slot]) dropCompound[slot] = chances[slot];
+                        }
+                        mobCompound.data.value.equipment.value.slot_drop_chances = {
+                            type: "compound",
+                            value: dropCompound
+                        };
+                    }
+                }
+                list.push(mobCompound);
+            } else {
+                const path = row.querySelector('.loot-path')?.value || "";
+                const weight = parseInt(row.querySelector('.loot-weight')?.value) || 1;
+                list.push({
+                    data: { type: "string", value: path },
+                    weight: { type: "int", value: weight }
+                });
+            }
+        }
+        return { type: "list", value: { type: "compound", value: list } };
+    };
+    
+    ['normal', 'ominous'].forEach(mode => {
+        const key = mode === 'normal' ? 'normal_config' : 'ominous_config';
+        const sfx = mode === 'normal' ? 'n' : 'o';
+        
+        tileEntity[key] = {
+            type: "compound",
+            value: {
+                total_mobs: { type: "float", value: parseFloat(document.getElementById(`tentity-tspawner-total-${sfx}`).value) || 6 },
+                total_mobs_added_per_player: { type: "float", value: parseFloat(document.getElementById(`tentity-tspawner-total-extra-${sfx}`).value) || 2 },
+                simultaneous_mobs: { type: "float", value: parseFloat(document.getElementById(`tentity-tspawner-sim-${sfx}`).value) || 2 },
+                simultaneous_mobs_added_per_player: { type: "float", value: parseFloat(document.getElementById(`tentity-tspawner-sim-extra-${sfx}`).value) || 1 },
+                spawn_range: { type: "int", value: parseInt(document.getElementById(`tentity-tspawner-range-${sfx}`).value) || 4 },
+                ticks_between_spawn: { type: "int", value: parseInt(document.getElementById(`tentity-tspawner-ticks-${sfx}`).value) || 20 },
+                target_cooldown_length: { type: "int", value: parseInt(document.getElementById(`tentity-tspawner-cooldown-${sfx}`).value) || 1200 },
+                spawn_potentials: getListFromUI(`mob-container-${mode}`, true),
+                loot_tables_to_eject: getListFromUI(`loot-container-${mode}`, false)
+            }
+        };
+        
+        if (mode === 'normal') {
+            tileEntity[key].value.items_to_drop_when_ominous = { 
+                type: "string", 
+                value: document.getElementById("tentity-tspawner-ominous-drop").value 
+            };
+        }
+    });
+    
+    const normalMobRows = document.getElementById('mob-container-normal').children;
+    if (normalMobRows.length > 0) {
+        const firstRow = normalMobRows[0];
+        const firstId = firstRow.querySelector('.mob-id').value;
+        const firstWeight = parseInt(firstRow.querySelector('.mob-weight').value) || 1;
+        const firstEquip = firstRow.querySelector('.mob-equip').value;
+
+        tileEntity.spawn_data = {
+            type: "compound",
+            value: {
+                TypeId: { type: "string", value: firstId },
+                Weight: { type: "int", value: firstWeight }
+            }
+        };
+        
+        if (firstEquip.trim() !== "") {
+            tileEntity.spawn_data.value.equipment = {
+                type: "compound",
+                value: {
+                    loot_table: { type: "string", value: firstEquip }
+                }
+            };
+            
+            const getD = (sel) => {
+                const v = firstRow.querySelector(sel)?.value;
+                return (v !== "" && v !== undefined) ? { type: "float", value: parseFloat(v) } : null;
+            };
+
+            const ch = {
+                head: getD('.drop-head'), chest: getD('.drop-chest'),
+                legs: getD('.drop-legs'), feet: getD('.drop-feet'),
+                mainhand: getD('.drop-mainhand'), offhand: getD('.drop-offhand')
+            };
+
+            if (Object.values(ch).some(v => v !== null)) {
+                let dropComp = {};
+                for (let s in ch) { if (ch[s]) dropComp[s] = ch[s]; }
+                tileEntity.spawn_data.value.equipment.value.slot_drop_chances = {
+                    type: "compound",
+                    value: dropComp
+                };
+            }
+        }
+    }
+
+    break;
+}
+case 'shelfblock': {
+    let items = currentValidTile.data.Items.value.value;
+    
+    // Checks if the shelf is completely empty
+    let isEmpty = items.every(item => item.Name.value === "" || item.Count.value === 0);
+
+    if (isEmpty) {
+        // If it's empty, we remove the Items tag (as in its index 2)
+        delete currentValidTile.data.Items;
+    } else {
+        // Optional: Remove empty slots ONLY from the end of the list to save space.
+        while (items.length > 0 && (items[items.length - 1].Name.value === "" || items[items.length - 1].Count.value === 0)) {
+            items.pop();
+        }
+    }
+    break;
+}
   }
   
   //Handle pseudo-tiles
@@ -2168,6 +3353,16 @@ function removeItemTag(propertyname){
   closeEditors()
 }
 
+function addItemTag(propertyname) {
+  saveItem();
+  let item = currentItem;
+  item.tag.value[propertyname] = {
+    "type": "int", 
+    "value": -1
+  };
+  closeEditors()
+}
+
 function saveItem(){  
   let item = currentItem;
   
@@ -2302,6 +3497,67 @@ function saveItem(){
     }
   }
   
+// Banner / Shield Item Tab
+if (document.getElementById("item-banner-tab") && document.getElementById("item-banner-tab").style.display !== "none") {
+    
+    const activeItem = (typeof currentItem !== 'undefined') ? currentItem : null;
+    const isShield = activeItem && activeItem.Name && activeItem.Name.value === "minecraft:shield";
+    const isOminous = document.getElementById("item-banner-type").checked;
+    const bannerBaseSelect = document.getElementById("item-banner-base");
+
+    // 1. Save the Base Color
+    if (isShield) {
+        // In the Shield: Saves to NBT (tag.Base) using the common select value.
+        if (bannerBaseSelect) {
+            tags.Base = { type: 'int', value: parseInt(bannerBaseSelect.value) };
+        }
+        // The shield does not use Type 1.
+        tags.Type = { type: 'int', value: 0 };
+    } else {
+        // In the Banner: Saves Type (Ominous) 
+        tags.Type = { type: 'int', value: isOminous ? 1 : 0 };
+    }
+
+    const patternsArray = [];
+
+    // 2. Logic of PATTERNS
+    if (isShield && isOminous) {
+        // In the Shield, "Ominous" is the pattern "ill" (Color 15)
+        patternsArray.push({
+            Pattern: { type: 'string', value: "ill" },
+            Color: { type: 'int', value: 15 }
+        });
+    } 
+    
+    // If it's not Ominous, it processes the pattern list normally. 
+    if (!isOminous) {
+        const patternList = document.getElementById("item-banner-patterns-list");
+        if (patternList) {
+            const rows = patternList.querySelectorAll(':scope > div');
+            rows.forEach(row => {
+                const pSel = row.querySelector('.p-sel');
+                const cSel = row.querySelector('.c-sel');
+                
+                if (pSel && cSel && pSel.value !== "none") {
+                    patternsArray.push({
+                        Pattern: { type: 'string', value: pSel.value },
+                        Color: { type: 'int', value: parseInt(cSel.value) }
+                    });
+                }
+            });
+        }
+    }
+
+    // 3. Save the final Patterns tag.
+    tags.Patterns = {
+        type: 'list',
+        value: {
+            type: 'compound',
+            value: patternsArray
+        }
+    };
+}
+  
   //Mob tab
   if(tags.identifier){
     tags.AppendCustomName = {type: 'byte', value: boolByte(document.getElementById("item-mobbucket-useattributes").checked)};
@@ -2330,25 +3586,102 @@ function saveItem(){
     };
   }
   
-  //Armor trim
-  if(tags.Trim){
-    tags.Trim = {
-      "type": "compound",
-      "value": {
-        "Material": {
-          "type": "string",
-          "value": document.getElementById("item-armor-trim-material").value
-        },
-        "Pattern": {
-          "type": "string",
-          "value": document.getElementById("item-armor-trim-pattern").value
+  // Fireworks / Star Item Tab
+if (document.getElementById("item-fireworks-tab") && document.getElementById("item-fireworks-tab").style.display !== "none") {
+    
+    const activeItem = (typeof currentItem !== 'undefined') ? currentItem : item;
+    const isRocket = activeItem && activeItem.Name && activeItem.Name.value === "minecraft:firework_rocket";
+    const isStar = activeItem && activeItem.Name && activeItem.Name.value === "minecraft:firework_star";
+
+    const rows = document.querySelectorAll('.explosion-row');
+    const explosionsArray = [];
+
+    // 1. Collects data from all explosions on the interface. 
+    rows.forEach(row => {
+        const type = row.querySelector('.fw-type');
+        const color = row.querySelector('.fw-color');
+        const fade = row.querySelector('.fw-fade');
+        const flicker = row.querySelector('.fw-flicker');
+        const trail = row.querySelector('.fw-trail');
+
+        if (type && color) {
+            const explosionData = {
+                FireworkColor: { type: "byteArray", value: [parseInt(color.value)] },
+                FireworkFade: { type: "byteArray", value: (fade.value === "none" ? [] : [parseInt(fade.value)]) },
+                FireworkFlicker: { type: "byte", value: flicker.checked ? 1 : 0 },
+                FireworkTrail: { type: "byte", value: trail.checked ? 1 : 0 },
+                FireworkType: { type: "byte", value: parseInt(type.value) }
+            };
+            explosionsArray.push({ type: "compound", value: explosionData });
         }
-      }
+    });
+
+    // 2. Record according to the item type (Rocket or Star)
+    if (isRocket) {
+        const flightInput = document.getElementById("item-firework-flight");
+        const flightVal = flightInput ? parseInt(flightInput.value) : 1;
+
+        // In Firework, everything goes under the 'Fireworks' tag. 
+        tags.Fireworks = {
+            type: "compound",
+            value: {
+                Flight: { type: "byte", value: flightVal },
+                Explosions: {
+                    type: "list",
+                    value: {
+                        type: "compound",
+                        value: explosionsArray
+                    }
+                }
+            }
+        };
+        delete tags.FireworksItem;
+
+    } else if (isStar) {
+        // In star, use 'FireworksItem' and pick only the first explosion from the list.
+        if (explosionsArray.length > 0) {
+            tags.FireworksItem = {
+                type: "compound",
+                value: explosionsArray[0].value
+            };
+        }
+        delete tags.Fireworks;
     }
-  }
+}
+
+  // Armor trim
+const isTrimmable = data.trimmable_armors.includes(item.Name.value);
+
+// Check if it's an armor item from the list or if it already has the tag (custom/addons).
+if (isTrimmable || tags.Trim) {
+    const selectedMaterial = document.getElementById("item-armor-trim-material").value;
+    const selectedPattern = document.getElementById("item-armor-trim-pattern").value;
+
+    // It only records if both are different from "none". 
+    if (selectedMaterial !== "none" && selectedPattern !== "none") {
+        tags.Trim = {
+            "type": "compound",
+            "value": {
+                "Material": {
+                    "type": "string",
+                    "value": selectedMaterial
+                },
+                "Pattern": {
+                    "type": "string",
+                    "value": selectedPattern
+                }
+            }
+        };
+    } else {
+        // If the user selected "none", remove the Trim tag to clear the NBT.
+        if (tags.Trim) {
+            delete tags.Trim;
+        }
+    }
+}
   
   //Leather color
-  if(tags.customColor){
+if(tags.customColor){
     tags.customColor = {
       "type": "int",
       "value": datHandler.argb.hexToInt(document.getElementById("item-armor-customcolor").value, true)

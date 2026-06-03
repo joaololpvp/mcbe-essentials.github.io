@@ -7,14 +7,14 @@
     <meta name="theme-color" content="#26203a" />
     <link
       rel="icon"
-      href="https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Fbcse.png?v=1617477950382"
+      href="/assets/bcse.png"
     />
     
     <title>MCBE Essentials</title>
 
     <!-- import the webpage's stylesheet -->
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="/item/style.css">
 
     <!-- import the webpage's javascript file -->
@@ -25,7 +25,7 @@
     <script src="/jszip.js" defer></script>
     <script src="/filesaver.js" defer></script>
     <script src="/item/script.js"></script>
-    <script src="script.js" defer></script>
+    <script src="./script.js" defer></script>
     <script>
       //alert("This app is unused.");
       //window.location.href = "/";
@@ -33,7 +33,7 @@
   </head>
   <body onload="">
     <div id="head" class="header">
-        <img src="https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Fbcse.png?v=1617477950382" class="imgicon">
+        <img src="/assets/bcse.png" class="imgicon">
       <span class="imgicontext">MCBE Essentials</span>
     </div>
     <div id="body" class="main-content">
@@ -77,22 +77,47 @@
                       <option value="0">ocean</option>
                       <option value="1">Loading biomes...</option>
                     </select><br>
+                    	<label>
+                       <input type="checkbox" id="flat-version-post-118" onchange="flatVersioning(this.checked)">
+                          Start at y level -64
+                      </label>
                     <!--<label><input type="checkbox" oninput="flatVersioning(this.checked)"> Start at y level -64</label>-->
                   </div>
                 </td>
               </tr>
               <tr class="infinite">
-                <td>
-                  <span>Infinite World</span><br>
-                  <div class="app-inner">
-                    Biome: <select class="app-input" style="width:320px;height:unset;" id="inf-biome" value="ocean" oninput="changeInfBiome(this.value)">
-                      <option value="ocean">ocean</option>
-                      <option value="ocean">Loading biomes...</option>
-                    </select><br>
-                    <label>World Seed: <input class="app-input" type="number" style="width: 250px;" placeholder="(leave blank for random)" oninput="changeInfSeed(this.value)" id="inf-seed"></label><br>
-                  </div>
-                </td>
-              </tr>
+  <td>
+    <span>Infinite World</span><br>
+    <div class="app-inner">
+      Biome: 
+      <!-- Select vanilla -->
+      <select class="app-input" style="width:320px;height:unset;" id="inf-biome" oninput="changeInfBiome(this.value)">
+        <option value="ocean">ocean</option>
+        <option value="ocean">Loading biomes...</option>
+      </select><br>
+      <!-- Checkbox to activate custom mode. -->
+      <div style="margin: 10px 0;">
+        <input type="checkbox" id="inf-custom-toggle">
+        <label for="inf-custom-toggle">Use manual biome (for addons or IDs not on the list)</label>
+      </div> 
+      <input 
+        type="text" 
+        id="inf-biome-custom" 
+        class="app-input" 
+        style="width:320px; height:unset; display:none; margin-top: 8px;" 
+        placeholder="Full ID (ex: myaddon:custom_biome)" 
+        oninput="if(document.getElementById('inf-custom-toggle').checked) changeInfBiome(this.value)">
+      <br>
+      	<div class="warningmsg" id="inf-biome-custom-warning" style="max-width: 410px; display: none;">
+      		Make sure the biome exists before entering the world; that is, check if the add-on is activated or if the biome is actually valid. Otherwise, a normal infinite world will be generated. Use it at your own risk!
+       </div>
+
+      <label>World Seed: 
+        <input class="app-input" type="number" style="width: 250px;" placeholder="(leave blank for random)" oninput="changeInfSeed(this.value)" id="inf-seed">
+      </label><br>
+    </div>
+  </td>
+</tr>
               <tr class="old">
                 <td>
                   <span>Old</span><br>
@@ -122,11 +147,11 @@
       </div>
     </div>
     <div class="menu-button2"
-         onmouseover="this.children[0].src='https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Felipses.png?v=1617471332712'"
-         onmouseleave="this.children[0].src='https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Fpermissions_custom_dots.png?v=1617471900740'"
+         onmouseover="this.children[0].src='/assets/icons/elipses.png'"
+         onmouseleave="this.children[0].src='/assets/icons/permissions_custom_dots.png'"
          onclick="toggleMenu(this)"
          >
-      <img src="https://cdn.glitch.com/17ff8eee-9239-4ba0-8a5c-9263261550b5%2Fpermissions_custom_dots.png?v=1617471900740" style="margin: 20px 8px;width:28px;image-rendering:pixelated;">
+      <img src="/assets/icons/permissions_custom_dots.png" style="margin: 20px 8px;width:28px;image-rendering:pixelated;">
     </div>
   </body>
 </html>
